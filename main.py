@@ -1,6 +1,7 @@
 # Export schedule builder input
 from pathlib import Path
-from icalendar import Event, vText
+import tempfile, os
+from icalendar import Calendar, Event
 from typing import NamedTuple
 from datetime import datetime
 import json
@@ -51,7 +52,7 @@ def parse(classinfo) -> list[Event]:
         byday = []
         for c in meeting['daysString']:
             byday.append(BYDAY_MAPPING[c])
-        byday = ','.join(byday)
+        #byday = ','.join(byday)
         event.add('rrule', {
             'freq': 'weekly',
             'interval': 1,
@@ -60,14 +61,21 @@ def parse(classinfo) -> list[Event]:
 
         event.add('location', f'{meeting['room']} {meeting['building']}')
 
-        pprint.pp(meeting)
-        print(event)
         events.append(event)
     return events
 
 if __name__ == "__main__":
-    pprint.pp(course_info)
-    parse(course_info[0])
+    events = parse(course_info[0])
+    cal = Calendar()
+    cal.add('prodid', '-//My calendar product//mxm.dk//')
+    cal.add('version', '2.0')
+    for event in events:
+        cal.add_component(event)
+
+    directory = tempfile.mkdtemp()
+    f = open(os.path.join(directory, 'example.ics'), 'wb')
+    f.write(cal.to_ical())
+    f.close()
 #    parsed_class_info = parse(class_info)
 #    calendar = get_calendar(parsed_class_info)
 #    write_export(path, calendar)
