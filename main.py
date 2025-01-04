@@ -35,22 +35,23 @@ def parse(classinfo) -> list[Event]:
     desc = classinfo['icmsData']['newDescription']
 
     for meeting in classinfo['meeting']:
-        pprint.pp(meeting)
         event = Event()
         event.add('description', desc)
         event.add('summary', f'{classname} - {meeting['description']}')
 
+        # dtstart and end has the same date but not the same time; endDate
+        # refers to the last class, accounting for repetition
         dtstart = datetime.strptime(meeting['startDate'], '%B, %d %Y %H:%M:%S')
-        dtstart.replace(hour=int(meeting['startTime'][:2]),
+        dtend = dtstart
+        dtstart = dtstart.replace(hour=int(meeting['startTime'][:2]),
                         minute=int(meeting['startTime'][2:4]))
-        event.add('dtstart', dtstart)
-        dtend = datetime.strptime(meeting['endDate'], '%B, %d %Y %H:%M:%S')
-        dtend.replace(hour=int(meeting['endTime'][:2]),
+        dtend = dtend.replace(hour=int(meeting['endTime'][:2]),
                         minute=int(meeting['endTime'][2:4]))
+        event.add('dtstart', dtstart)
         event.add('dtend', dtend)
         event.add('dtstamp', datetime.now())
 
-        until = datetime.strptime(meeting['startDate'], '%B, %d %Y %H:%M:%S')
+        until = datetime.strptime(meeting['endDate'], '%B, %d %Y %H:%M:%S')
         byday = []
         for c in meeting['daysString']:
             byday.append(BYDAY_MAPPING[c])
@@ -75,8 +76,8 @@ if __name__ == "__main__":
     for event in events:
         cal.add_component(event)
 
-    directory = tempfile.mkdtemp("python")
-    f = open(os.path.join(directory, 'example.ics'), 'wb')
+    f = tempfile.NamedTemporaryFile(prefix=str(datetime.now()), suffix='.ics',
+                                    delete=False)
     f.write(cal.to_ical())
     f.close()
 #    parsed_class_info = parse(class_info)
