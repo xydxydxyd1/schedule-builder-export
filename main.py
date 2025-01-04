@@ -35,6 +35,7 @@ def parse(classinfo) -> list[Event]:
     desc = classinfo['icmsData']['newDescription']
 
     for meeting in classinfo['meeting']:
+        pprint.pp(meeting)
         event = Event()
         event.add('description', desc)
         event.add('summary', f'{classname} - {meeting['description']}')
@@ -49,6 +50,7 @@ def parse(classinfo) -> list[Event]:
         event.add('dtend', dtend)
         event.add('dtstamp', datetime.now())
 
+        until = datetime.strptime(meeting['startDate'], '%B, %d %Y %H:%M:%S')
         byday = []
         for c in meeting['daysString']:
             byday.append(BYDAY_MAPPING[c])
@@ -56,7 +58,8 @@ def parse(classinfo) -> list[Event]:
         event.add('rrule', {
             'freq': 'weekly',
             'interval': 1,
-            'byday': byday
+            'byday': byday,
+            'until': until
         })
 
         event.add('location', f'{meeting['room']} {meeting['building']}')
@@ -72,7 +75,7 @@ if __name__ == "__main__":
     for event in events:
         cal.add_component(event)
 
-    directory = tempfile.mkdtemp()
+    directory = tempfile.mkdtemp("python")
     f = open(os.path.join(directory, 'example.ics'), 'wb')
     f.write(cal.to_ical())
     f.close()
