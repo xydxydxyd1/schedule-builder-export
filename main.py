@@ -92,17 +92,20 @@ def parse(classinfo) -> list[Event]:
 
         events.append(event)
 
-    # Final exam
-    event = Event()
-    event.add('description', desc)
-    event.add('summary', f'{classname} - Final')
-    dtstart = datetime.strptime(classinfo['finalExam']['examDate'],
-                                '%B, %d %Y %H:%M:%S')
-    dtend = dtstart + timedelta(hours = 2)
-    event.add('dtstart', dtstart)
-    event.add('dtend', dtend)
-    event.add('dtstamp', datetime.now())
-    events.append(event)
+    # Final exam (optional)
+    try:
+        event = Event()
+        event.add('description', desc)
+        event.add('summary', f'{classname} - Final')
+        dtstart = datetime.strptime(classinfo['finalExam']['examDate'],
+                                    '%B, %d %Y %H:%M:%S')
+        dtend = dtstart + timedelta(hours = 2)
+        event.add('dtstart', dtstart)
+        event.add('dtend', dtend)
+        event.add('dtstamp', datetime.now())
+        events.append(event)
+    except Exception as _:
+        pass
     return events
 
 def make_cal(courses: list[str]) -> Calendar:
